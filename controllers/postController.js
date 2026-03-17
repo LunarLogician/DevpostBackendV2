@@ -8,7 +8,7 @@ import Anthropic from '@anthropic-ai/sdk';
 // @access  Private
 export const generatePost = async (req, res) => {
   try {
-    const { topic, tone, length } = req.body;
+    const { topic, tone, length, image } = req.body;
     const userId = req.user._id;
 
     // Validation
@@ -19,10 +19,21 @@ export const generatePost = async (req, res) => {
       });
     }
 
+    console.log('📥 Post generation request received');
+    console.log('👤 User ID:', userId);
+    console.log('📝 Topic:', topic);
+    console.log('🎯 Tone:', tone);
+    console.log('📏 Length:', length);
+    console.log('🖼️ Image received:', !!image);
+    if (image) {
+      console.log('  └─ Size:', (image.length / 1024).toFixed(2), 'KB');
+    }
+
     // Check user's post limit
     const user = await User.findById(userId);
     
     if (!user.canGeneratePost()) {
+      console.log('❌ Post limit reached for user:', userId);
       return res.status(403).json({
         success: false,
         message: 'Monthly post limit reached. Upgrade to Pro for unlimited posts!',
@@ -40,7 +51,7 @@ export const generatePost = async (req, res) => {
 
     console.log(`📤 Topic: ${topic} Tone: ${tone} Length: ${length}`);
     
-    const systemPrompt = `You are a LinkedIn ghostwriter for software developers. Write a high-engagement LinkedIn post about the given topic. Rules:
+    const systemPrompt = `You are a LinkedIn ghostwriter for software developers. Write a high-engagement LinkedIn post about the given topic or image. Rules:
 - NO hashtags
 - NO markdown formatting
 - Plain text only
@@ -49,16 +60,55 @@ export const generatePost = async (req, res) => {
 - Strong opening hook
 - Short paragraphs
 - End with a question
-- Max 200 words`;
+- Max 200 words
+- If an image is provided, analyze it and make the post SPECIFIC to what you see in the image`;
+
+    // Build message content
+    const messageContent = [];
+
+    // Add image if provided
+    if (image) {
+      console.log('📸 Adding image to Claude API request');
+      
+      // Extract media type and base64 data
+      let mediaType = 'image/jpeg'; // default
+      let base64Data = image;
+
+      if (image.includes('data:')) {
+        // Format: data:image/png;base64,iVBORw0KGg...
+        const matches = image.match(/data:(image\/[a-z]+);base64,(.+)/);
+        if (matches) {
+          mediaType = matches[1];
+          base64Data = matches[2];
+          console.log('🖼️ Detected image type:', mediaType);
+        }
+      }
+
+      messageContent.push({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: mediaType,
+          data: base64Data
+        }
+      });
+    }
 
     const userPrompt = `Create a LinkedIn post with the following specifications:
 - Topic: ${topic}
 - Tone: ${tone}
 - Length: ${length}
 
+${image ? 'Analyze the provided image and create a post SPECIFICALLY about what you see in the image. Make it detailed and specific, not generic.' : 'Create a post about the topic.'}
+
 Return only the post content, nothing else.`;
+
+    messageContent.push({
+      type: 'text',
+      text: userPrompt
+    });
     
-    console.log('🔄 Calling Claude API...');
+    console.log('🔄 Calling Claude API with image analysis...');
     
     const message = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
@@ -67,7 +117,7 @@ Return only the post content, nothing else.`;
       messages: [
         {
           role: 'user',
-          content: userPrompt
+          content: messageContent
         }
       ]
     });
@@ -86,8 +136,12 @@ Return only the post content, nothing else.`;
       topic,
       tone,
       length,
-      content: generatedContent
+      content: generatedContent,
+      image: image || null
     });
+
+    console.log('💾 Post saved to database');
+    console.log('📌 Post ID:', post._id);
 
     // Update user's post count
     user.postsGenerated += 1;

@@ -103,25 +103,33 @@ export const login = async (req, res) => {
       });
     }
 
+    console.log('🔐 Login attempt for:', email);
+
     // Check for user
     const user = await User.findOne({ email });
 
     if (!user) {
+      console.log('❌ Email not found:', email);
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Email not registered. Please create an account first.'
       });
     }
+
+    console.log('✅ Email found, checking password...');
 
     // Check password
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
+      console.log('❌ Incorrect password for:', email);
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Incorrect password. Please try again.'
       });
     }
+
+    console.log('✅ Login successful for:', email);
 
     // All users in DB are already verified (verification happens before account creation)
     res.json({
