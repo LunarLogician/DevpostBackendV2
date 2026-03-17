@@ -40,12 +40,14 @@ export const generatePost = async (req, res) => {
 
     console.log(`📤 Topic: ${topic} Tone: ${tone} Length: ${length}`);
     
-    const systemPrompt = `You are a LinkedIn ghostwriter for software developers. Write a high-engagement LinkedIn post about the given topic. Rules: 
-- Strong hook
+    const systemPrompt = `You are a LinkedIn ghostwriter for software developers. Write a high-engagement LinkedIn post about the given topic. Rules:
+- NO hashtags
+- NO markdown formatting
+- Plain text only
+- Use CAPS for emphasis
+- Strong opening hook
 - Short paragraphs
-- Clear formatting
 - End with a question
-- Add 3 hashtags
 - Max 200 words`;
 
     const userPrompt = `Create a LinkedIn post with the following specifications:
