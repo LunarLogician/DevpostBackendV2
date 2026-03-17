@@ -135,7 +135,7 @@ userSchema.methods.canGeneratePost = function() {
   
   // Check limits based on plan
   const limits = {
-    free: 5,
+    free: 3,
     starter: 20,
     pro: 50
   };

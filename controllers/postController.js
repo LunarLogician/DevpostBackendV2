@@ -166,7 +166,7 @@ Return only the post content, nothing else.`;
       success: true,
       data: post,
       linkedinPostUrl,
-      remaining: ({ free: 5, starter: 20, pro: 50 }[user.plan] || 5) - user.monthlyPostsCount
+      remaining: ({ free: 3, starter: 20, pro: 50 }[user.plan] || 3) - user.monthlyPostsCount
     });
 
   } catch (error) {
@@ -326,8 +326,8 @@ export const getStats = async (req, res) => {
         plan: user.plan,
         totalPosts,
         monthlyPostsUsed: user.monthlyPostsCount,
-        monthlyPostsLimit: { free: 5, starter: 20, pro: 50 }[user.plan] || 5,
-        remaining: ({ free: 5, starter: 20, pro: 50 }[user.plan] || 5) - user.monthlyPostsCount,
+        monthlyPostsLimit: { free: 3, starter: 20, pro: 50 }[user.plan] || 3,
+        remaining: ({ free: 3, starter: 20, pro: 50 }[user.plan] || 3) - user.monthlyPostsCount,
         linkedinConnected: !!user.linkedinAccessToken,
         autoPostToLinkedIn: user.autoPostToLinkedIn
       }
