@@ -45,6 +45,7 @@ export const generatePost = async (req, res) => {
 - NO markdown formatting
 - Plain text only
 - Use CAPS for emphasis
+- Add relevant emojis
 - Strong opening hook
 - Short paragraphs
 - End with a question
